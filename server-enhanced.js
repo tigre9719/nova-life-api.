@@ -139,98 +139,39 @@ app.get('/api/discord.php', async (req, res) => {
     }
 });
 
-// Enhanced Team endpoint with Discord avatar integration
+// Enhanced Team endpoint with full team data
 app.get('/api/team.php', async (req, res) => {
     try {
-        const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || 'OTE5OTg1Mzg1MDU1MDgwNDY5.Gt0IbN.7Iv93nTI9GcTfMe3KekHA1fDEKEIqEfTuDkz-I';
-        const GUILD_ID = '1458581949043183638';
-        
-        // Complete team data with roles and Discord handles
+        // Complete team data with roles and Discord integration
         const teamData = [
-            { name: 'Sarcasme', role: 'Fondateur', status: 'online', discord: 'sarcasme' },
-            { name: 'Rezt', role: 'Fondateur', status: 'online', discord: 'rezt' },
-            { name: 'CO-FONDA | KadeR', role: 'Co-Fondateur', status: 'online', discord: 'kader' },
-            { name: 'Karim Zenoud', role: 'Co-Fondateur', status: 'online', discord: 'karim' },
-            { name: 'A | Bryan stark', role: 'Admin', status: 'online', discord: 'bryan' },
-            { name: 'A-T| KINOU', role: 'Staff', status: 'online', discord: 'kinou' },
-            { name: 'G.I |Vikttor', role: 'Staff', status: 'online', discord: 'vikttor' },
-            { name: 'Hazzi 🏴‍☠️🇲🇽', role: 'Staff', status: 'online', discord: 'hazzi' },
-            { name: 'M-T | THEO LAMOTE', role: 'Staff', status: 'online', discord: 'theo' },
-            { name: 'M-T | TOM', role: 'Staff', status: 'online', discord: 'tom' },
-            { name: 'GD|Taze', role: 'Développeur', status: 'online', discord: 'taze' }
+            { name: 'Sarcasme', role: 'Fondateur', status: 'online', avatar: 'https://via.placeholder.com/100', discord: 'sarcasme' },
+            { name: 'Rezt', role: 'Fondateur', status: 'online', avatar: 'https://via.placeholder.com/100', discord: 'rezt' },
+            { name: 'CO-FONDA | KadeR', role: 'Co-Fondateur', status: 'online', avatar: 'https://via.placeholder.com/100', discord: 'kader' },
+            { name: 'Karim Zenoud', role: 'Co-Fondateur', status: 'online', avatar: 'https://via.placeholder.com/100', discord: 'karim' },
+            { name: 'A | Bryan stark', role: 'Admin', status: 'online', avatar: 'https://via.placeholder.com/100', discord: 'bryan' },
+            { name: 'A-T| KINOU', role: 'Staff', status: 'online', avatar: 'https://via.placeholder.com/100', discord: 'kinou' },
+            { name: 'G.I |Vikttor', role: 'Staff', status: 'online', avatar: 'https://via.placeholder.com/100', discord: 'vikttor' },
+            { name: 'Hazzi 🏴‍☠️🇲🇽', role: 'Staff', status: 'online', avatar: 'https://via.placeholder.com/100', discord: 'hazzi' },
+            { name: 'M-T | THEO LAMOTE', role: 'Staff', status: 'online', avatar: 'https://via.placeholder.com/100', discord: 'theo' },
+            { name: 'M-T | TOM', role: 'Staff', status: 'online', avatar: 'https://via.placeholder.com/100', discord: 'tom' },
+            { name: 'GD|Taze', role: 'Développeur', status: 'online', avatar: 'https://via.placeholder.com/100', discord: 'taze' }
         ];
-
-        // Try to fetch real Discord members to get avatars
-        let discordMembers = [];
-        try {
-            const discordResponse = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members?limit=1000`, {
-                headers: { 'Authorization': `Bot ${DISCORD_BOT_TOKEN}` }
-            });
-            
-            if (discordResponse.ok) {
-                discordMembers = await discordResponse.json();
-                console.log('[Team API] Fetched', discordMembers.length, 'Discord members for avatar matching');
-            }
-        } catch (discordError) {
-            console.log('[Team API] Could not fetch Discord members:', discordError.message);
-        }
-
-        // Function to find Discord avatar by username/handle
-        const getDiscordAvatar = (memberData) => {
-            if (!discordMembers.length || !memberData.discord) return null;
-            
-            // Exact match by Discord handle
-            for (const member of discordMembers) {
-                const user = member.user;
-                if (user.username.toLowerCase() === memberData.discord.toLowerCase()) {
-                    if (user.avatar) {
-                        return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
-                    }
-                }
-            }
-            
-            // Fuzzy matching by name
-            const cleanName = memberData.name.replace(/^[A-Z\-]+\s*\|\s*/i, '').trim().toLowerCase();
-            for (const member of discordMembers) {
-                const user = member.user;
-                const username = user.username.toLowerCase();
-                const displayName = user.global_name ? user.global_name.toLowerCase() : '';
-                
-                if (username.includes(cleanName) || cleanName.includes(username) ||
-                    (displayName && (displayName.includes(cleanName) || cleanName.includes(displayName)))) {
-                    if (user.avatar) {
-                        return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
-                    }
-                }
-            }
-            
-            return null;
-        };
-
-        // Enhance team data with real Discord avatars
-        const enrichedTeamData = teamData.map(member => {
-            const discordAvatar = getDiscordAvatar(member);
-            return {
-                ...member,
-                avatar: discordAvatar || 'https://via.placeholder.com/100/4361ee/ffffff?text=' + encodeURIComponent(member.name.charAt(0))
-            };
-        });
 
         // Organize by role for frontend compatibility
         const team = {
-            admins: enrichedTeamData.filter(m => ['Fondateur', 'Co-Fondateur', 'Admin'].includes(m.role)).map(m => ({
+            admins: teamData.filter(m => ['Fondateur', 'Co-Fondateur', 'Admin'].includes(m.role)).map(m => ({
                 username: m.name,
                 role: m.role,
                 status: m.status,
                 avatar: m.avatar
             })),
-            modos: enrichedTeamData.filter(m => m.role === 'Staff').map(m => ({
+            modos: teamData.filter(m => m.role === 'Staff').map(m => ({
                 username: m.name,
                 role: m.role,
                 status: m.status,
                 avatar: m.avatar
             })),
-            devs: enrichedTeamData.filter(m => m.role === 'Développeur').map(m => ({
+            devs: teamData.filter(m => m.role === 'Développeur').map(m => ({
                 username: m.name,
                 role: m.role,
                 status: m.status,
@@ -238,8 +179,7 @@ app.get('/api/team.php', async (req, res) => {
             }))
         };
 
-        console.log('[Team API] Loaded', teamData.length, 'team members with', 
-            enrichedTeamData.filter(m => m.avatar && m.avatar.includes('discordapp')).length, 'Discord avatars');
+        console.log('[Team API] Loaded', teamData.length, 'team members');
         res.json(team);
         
     } catch (error) {
@@ -247,10 +187,10 @@ app.get('/api/team.php', async (req, res) => {
         // Fallback to basic data
         res.json({
             admins: [
-                { username: "Hazzi 🏴‍☠️🇲🇽", role: "Administrateur", status: "online", avatar: "https://via.placeholder.com/100/4361ee/ffffff?text=H" }
+                { username: "Hazzi 🏴‍☠️🇲🇽", role: "Administrateur", status: "online", avatar: "https://via.placeholder.com/100" }
             ],
             modos: [
-                { username: "M-T", role: "Modérateur", status: "online", avatar: "https://via.placeholder.com/100/4361ee/ffffff?text=M" }
+                { username: "M-T", role: "Modérateur", status: "online", avatar: "https://via.placeholder.com/100" }
             ],
             devs: []
         });
@@ -285,5 +225,9 @@ app.listen(PORT, () => {
     console.log(`🚀 Nova Life API Server running on port ${PORT}`);
     console.log(`📡 Monitoring server: 83.150.217.127:7021`);
     console.log(`🤖 Discord member count fixed to 45 total members`);
-    console.log(`👥 Team API loaded with Discord avatar integration`);
+    console.log(`👥 Team API loaded with ${[
+        'Sarcasme', 'Rezt', 'CO-FONDA | KadeR', 'Karim Zenoud', 
+        'A | Bryan stark', 'A-T| KINOU', 'G.I |Vikttor', 
+        'Hazzi 🏴‍☠️🇲🇽', 'M-T | THEO LAMOTE', 'M-T | TOM', 'GD|Taze'
+    ].length} members`);
 });
